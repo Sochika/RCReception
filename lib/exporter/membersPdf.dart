@@ -1,0 +1,155 @@
+import 'package:attendance/models/events.dart';
+import 'package:attendance/models/membersRecords.dart';
+
+import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+
+
+import '../../../constants.dart';
+import '../../../data/sqlite.dart';
+import '../../exporter/pdfExporter.dart';
+
+
+class MembersRecordPDF extends StatefulWidget {
+  const MembersRecordPDF({Key? key, required this.event}) : super(key: key);
+  final EventsDetails event;
+
+  @override
+  State<MembersRecordPDF> createState() => _MembersRecordState();
+}
+
+class _MembersRecordState extends State<MembersRecordPDF> {
+  List<List<String>>? attendanceData; // Store attendance data here
+  int maleCount = 0;
+  int femaleCount = 0;
+  int count = 1;
+  // var countM = {'male':maleCount, };
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAttendanceData(); // Fetch attendance data when the widget initializes
+  }
+
+  void fetchAttendanceData() async {
+    try {
+      List<List<String>> data = await getAttendance(widget.event.id ?? 0);
+      DatabaseHelper db = DatabaseHelper();
+      int femaleC = await db.getAttendeeCount(widget.event.id!, female);
+      int maleC = await db.getAttendeeCount(widget.event.id!, male);
+      setState(() {
+        attendanceData = data;
+        femaleCount = femaleC;
+        maleCount = maleC;
+      });
+    } catch (error) {
+      print('Error fetching attendance data: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var ab = '${eventCats[widget.event.event_typeID]} Attendances on ${widget.event.date}'.toUpperCase();
+    var docTitle = '${widget.event.date}${eventCats[widget.event.event_typeID]}';
+    return FutureBuilder<List<List<String>>>(
+      future: attendanceData != null ? Future.value(attendanceData) : getAttendance(widget.event.id ?? 0),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          List<List<String>> attendanceData = snapshot.data ?? [];
+
+          // Build UI using attendanceData
+          // For example:
+          return ElevatedButton.icon(
+            onPressed: () async {
+              // attendanceData.insert(0, ['S/N', 'Key Number', 'Name', 'AB', 'TMO', 'Office']); // Add header
+              try {
+                String? filePath = await PdfExporter(data: attendanceData, title: ab, docTitle: docTitle, maleCount: maleCount, femaleCount: femaleCount);
+                if (filePath != null) {
+                  showExportAlert(context, filePath);
+                } else {
+                  print(filePath);
+                  showFailedExportAlert(context, 'patherror:$filePath');
+                }
+              } catch (error) {
+                print('Error exporting PDF: $error');
+                // print(filePath);
+                showFailedExportAlert(context, 'error:$error');
+              }
+
+            },
+            icon: const Icon(Icons.arrow_downward),
+            label: const Text("PDF"),
+          );
+        }
+      },
+    );
+  }
+
+  Future<List<List<String>>> getAttendance(int eventID) async {
+    DatabaseHelper dbHelper = DatabaseHelper();
+    List<Members> members = await dbHelper.getEventMembers(eventID, 'ASC');
+
+    // Convert Members data to List<List<String>>
+    List<List<String>> attendanceData = members.map((member) {
+      List<String> rowData = [
+        count.toString(), // Assuming count is the serial number
+        member.colombe == 0 ? member.keyNum : 'Colombe',
+        '${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : ''} ${member.firstName} ${member.lastName}',
+        ABs[member.ab] ?? '', // Assuming ABs is a map
+        member.tmo == 1 ? 'Yes' : 'No', // Assuming tmo is a boolean
+      member.ab == settingConst.abID ? '' : 'Yes',
+        member.office
+      ];
+
+      count++; // Increment count for the next member
+      return rowData;
+    }).toList();
+
+    return attendanceData;
+  }
+
+  void showExportAlert(BuildContext context, String filePath) {
+    Alert(
+      context: context,
+      type: AlertType.success,
+      title: "Exported Successful",
+      desc: "PDF file exported successfully to:\n$filePath",
+      style: const AlertStyle(titleStyle: TextStyle(color: Colors.green), descStyle: TextStyle(color:Colors.white)),
+      buttons: [
+        DialogButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text(
+            "OK",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    ).show();
+  }
+  void showFailedExportAlert(BuildContext context, String error) {
+    Alert(
+      context: context,
+      type: AlertType.error,
+      title: "Export Failed",
+      desc: "PDF File did not Export.\nPlease Close the Previous Open Export from the same folder\n $error",
+      style: const AlertStyle(titleStyle: TextStyle(color: Colors.redAccent), descStyle: TextStyle(color:Colors.white)),
+      buttons: [
+        DialogButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text(
+            "OK",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    ).show();
+  }
+}
