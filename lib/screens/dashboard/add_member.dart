@@ -205,7 +205,8 @@ class _AddMemberDataState extends State<AddMemberData> {
                         label: const Text('GCA'),
                         dropdownMenuEntries: const [
                           DropdownMenuEntry(value: '', label: ''),
-                          DropdownMenuEntry(value: '1', label: 'Rivers'),
+                          DropdownMenuEntry(value: '1', label: 'Rivers East'),
+                          DropdownMenuEntry(value: '2', label: 'Rivers West'),
                         ],
                         onSelected: (value){
                           gcaController.text = value!;
@@ -360,7 +361,7 @@ class _AddMemberDataState extends State<AddMemberData> {
                           text: 'Please fill the required Data',
                         );
                       }else{
-                        Members member = Members(firstName: fNameController.text, lastName: lNameController.text, middleName: mNameController.text, keyNum: keyNumController.text, gender: genderController.text, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text, phoneNum: phoneNumController.text, tmo: int.parse(tmoController.text), colombe: 0);
+                        Members member = Members(firstName: fNameController.text.trim(), lastName: lNameController.text.trim(), middleName: mNameController.text.trim(), keyNum: keyNumController.text.trim(), gender: genderController.text, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text.trim(), phoneNum: phoneNumController.text.trim(), tmo: int.parse(tmoController.text), colombe: 0);
 
                         // print(fNameController.text);
                         // print(member.lastName);

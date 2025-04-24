@@ -76,12 +76,12 @@ class _MarkAttendanceState extends State<MarkAttendance> {
                       controller: keyNumController,
                       keyboardType: TextInputType.number,
                       onSubmitted: (value)=>
-                        keyAttend(value, width, height),
+                        keyAttend(value.trim(), width, height),
                     ),
                   ),
                   SizedBox(width: width / 12),
                   ElevatedButton(
-                    onPressed: ()=>keyAttend(keyNumController.text, width, height),
+                    onPressed: ()=>keyAttend(keyNumController.text.trim(), width, height),
                     child: const Text('Enter'),
                   ),
                 ],
@@ -159,7 +159,7 @@ class _MarkAttendanceState extends State<MarkAttendance> {
                 itemCount: members.length,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
-                    title: Text("${members[index].keyNum}: ${members[index].gender == 'Male' ? 'Fr.' : 'Sr.'} ${members[index].firstName} ${members[index].middleName == 'null' ? '' : members[index].middleName} ${members[index].lastName}, ${members[index].gender}"),
+                    title: Text("${members[index].colombe == 0 ? members[index].keyNum : ''}: ${members[index].colombe == 0 ? members[index].gender == 'Male' ? 'Fr.' : 'Sr.' : members[index].office} ${members[index].firstName} ${members[index].middleName == 'null' ? '' : members[index].middleName} ${members[index].lastName}, ${members[index].gender}"),
                     onTap: () async {
                       // () => Navigator.pop(context);
                       Attendances attendance = Attendances(keyNum: members[index].keyNum, gender: members[index].gender, eventID: widget.events.id ?? 0);

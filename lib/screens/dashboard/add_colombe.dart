@@ -55,12 +55,12 @@ class _AddColombeDataState extends State<AddColombeData> {
     TextEditingController tmoController = TextEditingController();
     TextEditingController dobController = TextEditingController();
     // print(lNameController.text);
-    gcaController.text = '0';
-    abController.text = '0';
+    // gcaController.text = '0';
+    // abController.text = '0';
     tmoController.text = '0';
     emailController.text = 'colombe@amorc.org.ng';
     phoneNumController.text = '080200000';
-    officeController.text = 'Colombe';
+    // officeController.text = 'Colombe';
     int? _selectedAbId;
 
 
@@ -80,7 +80,7 @@ class _AddColombeDataState extends State<AddColombeData> {
               mainAxisAlignment: MainAxisAlignment.center,
 
               children: [
-                const ImportMembers(),
+                // const ImportMembers(),
                 const SizedBox(height: defaultPadding),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,8 @@ class _AddColombeDataState extends State<AddColombeData> {
                         label: const Text('GCA'),
                         dropdownMenuEntries: const [
                           DropdownMenuEntry(value: '', label: ''),
-                          DropdownMenuEntry(value: '1', label: 'Rivers'),
+                          DropdownMenuEntry(value: '1', label: 'Rivers East'),
+                          DropdownMenuEntry(value: '2', label: 'Rivers West'),
                         ],
                         onSelected: (value){
                           gcaController.text = value!;
@@ -199,11 +200,38 @@ class _AddColombeDataState extends State<AddColombeData> {
 
                   ],
                 ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    const SizedBox(width: defaultPadding),
+                    SizedBox(
+                      height: 90.0,
+                      width: width /4,
+                      child: DropdownMenu<String>(
+                        width: width /4,
+                        label: const Text('Office'),
+                        dropdownMenuEntries: const [
+                          // DropdownMenuEntry(value: '', label: ''),
+                          DropdownMenuEntry(value: 'Colombe', label: 'Colombe'),
+                          DropdownMenuEntry(value: 'CE', label: 'Colombe Emeritus'),
+                          DropdownMenuEntry(value: 'CIW', label: 'Colombe-In-Waiting'),
+
+                        ],
+                        onSelected: (value){
+                          officeController.text = value!;
+                        },
+                        // controller: officeController,
+                      ),
+                    ),
+
+                  ],
+                ),
 
                 SizedBox(width: width * 3 / 4 + (defaultPadding *2),
 
                     child: ElevatedButton(onPressed: () async {
-                      if(fNameController.text == '' || lNameController.text == '' || dobController.text == '' ){
+                      if(fNameController.text == '' || lNameController.text == '' || dobController.text == '' || officeController.text == ''){
                         QuickAlert.show(
                           context: context,
                           type: QuickAlertType.error,
@@ -211,7 +239,7 @@ class _AddColombeDataState extends State<AddColombeData> {
                           text: 'Please fill the required Data',
                         );
                       }else{
-                        Members member = Members(firstName: fNameController.text, lastName: lNameController.text, middleName: mNameController.text, keyNum: fNameController.text.toLowerCase() + lNameController.text.toLowerCase(), gender: female, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text, phoneNum: phoneNumController.text, tmo: 0, colombe: 1, dateOfBirth: dobController.text ?? '');
+                        Members member = Members(firstName: fNameController.text, lastName: lNameController.text.trim(), middleName: mNameController.text.trim(), keyNum: fNameController.text.toLowerCase().trim() + lNameController.text.toLowerCase().trim(), gender: female, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text.trim(), phoneNum: phoneNumController.text.trim(), tmo: 0, colombe: 1, dateOfBirth: dobController.text ?? '');
 
                         // print(fNameController.text);
                         // print(member.lastName);

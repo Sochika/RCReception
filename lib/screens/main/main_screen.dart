@@ -70,7 +70,7 @@ class _MainScreenState extends State<MainScreen> {
             context: context,
             initialDate: date,
             firstDate: DateTime.parse('2020-07-28'),
-            lastDate: DateTime.now(),
+            lastDate: DateTime.parse('2200-07-28'),
             onDatePickerModeChange: (dat) {
               date = DateTime.parse(dat.toString());
             },

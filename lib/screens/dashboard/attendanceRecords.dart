@@ -184,12 +184,12 @@ class _MembersRecordState extends State<MembersRecord> {
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-                child: Text(member.colombe == 0 ? member.keyNum : 'Colombe'),
+                child: Text(member.colombe == 0 ? member.keyNum : member.office),
               ),
             ],
           ),
         ),
-        DataCell(Text('${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : ''} ${member.firstName} ${member.lastName}')),
+        DataCell(Text('${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.office} ${member.firstName} ${member.lastName}')),
         DataCell(Text(ABs[member.ab]!)),
         DataCell(
           member.tmo == 1

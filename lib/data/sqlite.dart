@@ -265,7 +265,11 @@ class DatabaseHelper {
 
     // Query the table for all the dogs.
     final List<Map<String, Object?>> memberMaps =
-        await dbasql.query('members', where: 'keyNum = ?', whereArgs: [keyNum]);
+    await dbasql.query(
+      'members',
+      where: 'keyNum LIKE ?',
+      whereArgs: ['$keyNum%'], // Begins with `keyNum`
+    );
 
     List<Members> dataList =
         memberMaps.map((map) => Members.fromJson(map)).toList();
@@ -554,6 +558,21 @@ class DatabaseHelper {
 
     return num;
   }
+
+  Future<int> getColombeAttendeeCount(int id) async {
+    // Open the database
+    await open();
+
+    // Query the number of attendees from the table
+    int num = Sqflite.firstIntValue(await dbasql.rawQuery(
+        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum WHERE attendances.events_id = ? AND members.colombe = 1",
+        [id]))!;
+    // Close the database
+    print('colombe $num');
+    // await dbasql.close();
+
+    return num;
+  }
   // SELECT DISTINCT members.*
   // FROM attendances
   // JOIN members ON attendances.keyNum = members.keyNum
@@ -565,7 +584,7 @@ class DatabaseHelper {
     // Query the number of males from the table
 
     int num = Sqflite.firstIntValue(await dbasql
-        .rawQuery("SELECT COUNT(*) FROM members WHERE gender = '$gender'"))!;
+        .rawQuery("SELECT COUNT(*) FROM members WHERE gender = ?", [gender]))!;
     await dbasql.close();
     return num;
   }

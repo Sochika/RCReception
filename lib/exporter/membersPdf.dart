@@ -1,3 +1,5 @@
+// import 'dart:io';
+
 import 'package:attendance/models/events.dart';
 import 'package:attendance/models/membersRecords.dart';
 
@@ -22,6 +24,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
   List<List<String>>? attendanceData; // Store attendance data here
   int maleCount = 0;
   int femaleCount = 0;
+  int colombeCount = 0;
   int count = 1;
   // var countM = {'male':maleCount, };
 
@@ -33,13 +36,15 @@ class _MembersRecordState extends State<MembersRecordPDF> {
 
   void fetchAttendanceData() async {
     try {
-      List<List<String>> data = await getAttendance(widget.event.id ?? 0);
+      List<List<String>> data = await getAttendance(2 ?? 0);
       DatabaseHelper db = DatabaseHelper();
       int femaleC = await db.getAttendeeCount(widget.event.id!, female);
+      int colombeC = await db.getColombeAttendeeCount(widget.event.id!);
       int maleC = await db.getAttendeeCount(widget.event.id!, male);
       setState(() {
         attendanceData = data;
         femaleCount = femaleC;
+        colombeCount = colombeC;
         maleCount = maleC;
       });
     } catch (error) {
@@ -67,12 +72,17 @@ class _MembersRecordState extends State<MembersRecordPDF> {
             onPressed: () async {
               // attendanceData.insert(0, ['S/N', 'Key Number', 'Name', 'AB', 'TMO', 'Office']); // Add header
               try {
-                String? filePath = await PdfExporter(data: attendanceData, title: ab, docTitle: docTitle, maleCount: maleCount, femaleCount: femaleCount);
+                String? filePath = await PdfExporter(data: attendanceData, title: ab, docTitle: docTitle, maleCount: maleCount, femaleCount: femaleCount, colombeCount: colombeCount);
                 if (filePath != null) {
                   showExportAlert(context, filePath);
                 } else {
-                  print(filePath);
-                  showFailedExportAlert(context, 'patherror:$filePath');
+                  // String result = await setAttendanceFolder();
+                  // final pdf = pw.Document();
+                  //   String filePath2 = '$result\\$docTitle.pdf';
+                    // final file = File(filePath2);
+                    // await file.writeAsBytes(await pdf.save());
+                  // print(filePath2);
+                  showFailedExportAlert(context, 'patherror: $filePath saved at Documents instead');
                 }
               } catch (error) {
                 print('Error exporting PDF: $error');
@@ -97,8 +107,8 @@ class _MembersRecordState extends State<MembersRecordPDF> {
     List<List<String>> attendanceData = members.map((member) {
       List<String> rowData = [
         count.toString(), // Assuming count is the serial number
-        member.colombe == 0 ? member.keyNum : 'Colombe',
-        '${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : ''} ${member.firstName} ${member.lastName}',
+        member.colombe == 0 ? member.keyNum : member.office,
+        '${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.office} ${member.firstName} ${member.lastName}',
         ABs[member.ab] ?? '', // Assuming ABs is a map
         member.tmo == 1 ? 'Yes' : 'No', // Assuming tmo is a boolean
       member.ab == settingConst.abID ? '' : 'Yes',

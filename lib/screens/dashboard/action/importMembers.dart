@@ -22,23 +22,20 @@ class ImportMembers extends StatelessWidget {
       children: [
         ElevatedButton.icon(
           style: TextButton.styleFrom(
-
             padding: EdgeInsets.symmetric(
               horizontal: defaultPadding * 1.5,
-              vertical:
-              defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+              vertical: defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
             ),
           ),
           onPressed: () async {
-
             FilePickerResult? result = await FilePicker.platform.pickFiles();
-           if (result != null) {
+            if (result != null) {
               File file = File(result.files.single.path!);
               print(file.toString());
 
-             int? dataSuccess;
+              int? dataSuccess;
               try {
-                dataSuccess = await  importExcel(file, context);
+                dataSuccess = await importExcel(file, context);
               } on Exception catch (e) {
                 QuickAlert.show(
                   context: context,
@@ -55,7 +52,6 @@ class ImportMembers extends StatelessWidget {
                 ); // Catches all types of `Exception` and `Error`.
               }
 
-
               // if(dataSuccess == Error){
               //
               //   QuickAlert.show(
@@ -65,8 +61,7 @@ class ImportMembers extends StatelessWidget {
               //     text: 'Sorry, something went wrong',
               //   );
               // }
-              if(dataSuccess == 1){
-
+              if (dataSuccess == 1) {
                 QuickAlert.show(
                   context: context,
                   type: QuickAlertType.success,
@@ -76,112 +71,190 @@ class ImportMembers extends StatelessWidget {
               // print(data);
             } else {
               // User canceled the picker
-             QuickAlert.show(
-               context: context,
-               type: QuickAlertType.error,
-               title: 'Oops...',
-               text: 'Sorry, something went wrong',
-             );
+              QuickAlert.show(
+                context: context,
+                type: QuickAlertType.error,
+                title: 'Oops...',
+                text: 'Sorry, something went wrong',
+              );
             }
-
           },
           icon: const Icon(Icons.file_present_rounded),
           label: const Text("Import Excel"),
         ),
         const SizedBox(width: defaultPadding),
         ElevatedButton.icon(
-      style: TextButton.styleFrom(
-        backgroundColor: Colors.blueGrey,
-      padding: EdgeInsets.symmetric(
-      horizontal: defaultPadding * 1.5,
-      vertical:
-      defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-      ),
-
-      ),
-
-      onPressed: () async {
-        _downloadFile(context);
-      },
-    icon: const Icon(Icons.download),
-    label: const Text("Download Sample"),
-    ),
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.blueGrey,
+            padding: EdgeInsets.symmetric(
+              horizontal: defaultPadding * 1.5,
+              vertical: defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+            ),
+          ),
+          onPressed: () async {
+            _downloadFile(context);
+          },
+          icon: const Icon(Icons.download),
+          label: const Text("Download Sample"),
+        ),
       ],
     );
   }
 
-
-
-
   Future<int> importExcel(File file, BuildContext context) async {
-    var bytes = file.readAsBytesSync();
-    var excel = Excel.decodeBytes(bytes);
+    try {
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.loading,
+        title: 'Loading',
+        text: 'Processing your Excel file',
+      );
 
-    var databasesPath = await getDatabasesPath();
-    var dbPath = join(databasesPath, 'membersAttendance.db');
-    Database database = await openDatabase(dbPath, version: 3, onCreate: (Database db, int version) async {
-      // Create the database tables if they don't exist
-    });
+      var bytes = file.readAsBytesSync();
+      var excel = Excel.decodeBytes(bytes);
 
-    QuickAlert.show(
-      context: context,
-      type: QuickAlertType.loading,
-      title: 'Loading',
-      text: 'Fetching your data',
-    );
-
-    for (var row in excel.tables['Members']!.rows) {
-      try {
-        await database.insert(
-          'members',
-          {
-              'lastName': row[1]?.value.toString(),
-              'firstName': row[2]?.value.toString(),
-              'middleName': row[3]?.value.toString() ?? '',
-              'natalDay': row[4]?.value.toString() ?? '',
-              'phoneNumber': row[5]?.value.toString() ?? '',
-              'keyNum': row[6]?.value.toString(),
-              'gender': row[7]?.value.toString() == 'M' ? 'Male' : 'Female',
-              'affiliatedNum': row[12]!.value.toString(),
-              'tmo': int.parse(row[8]!.value.toString().isEmpty ? '0' : row[8]!.value.toString()),
-              'late': int.parse(row[10]!.value.toString()),
-              'ab_id': int.parse(row[9]!.value.toString()),
-              'office': row[13]?.value.toString(),
-              // 'firstName': row[1].toString(),
-              // 'firstName': row[1].toString(),
-              // Map other columns accordingly
-          },
-        );
-
-        if (row[1]!.value.toString().length > 3) {
-          await database.insert(
-            'dues',
-            {
-                'keyNum': row[6]?.value.toString(),
-                'gender': row[7]?.value.toString() == 'M' ? 'Male' : 'Female',
-                'affiliatedNum': row[12]?.value.toString() ?? '',
-                'affiliatedDate': row[11]?.value.toString()?? '',
-
-                // 'firstName': row[1].toString(),
-                // 'firstName': row[1].toString(),
-                // Map other columns accordingly
-            },
+      final membersTable = excel.tables['Members'];
+      if (membersTable == null) {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          QuickAlert.show(
+            context: context,
+            type: QuickAlertType.error,
+            title: 'Error',
+            text: 'Excel file does not contain a "Members" sheet',
           );
         }
-      } catch (e) {
-        print(e);
-        continue;
+        return 0;
       }
+
+      var databasesPath = await getDatabasesPath();
+      var dbPath = join(databasesPath, 'membersAttendance.db');
+
+      Database database = await openDatabase(dbPath, version: 3, onCreate: (Database db, int version) async {
+        await db.execute('''
+        CREATE TABLE IF NOT EXISTS members (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          lastName TEXT,
+          firstName TEXT,
+          middleName TEXT,
+          natalDay TEXT,
+          phoneNumber TEXT,
+          keyNum TEXT,
+          gender TEXT,
+          affiliatedNum TEXT,
+          tmo INTEGER,
+          late INTEGER,
+          ab_id INTEGER,
+          office TEXT
+        )
+      ''');
+
+        await db.execute('''
+        CREATE TABLE IF NOT EXISTS dues (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          keyNum TEXT,
+          gender TEXT,
+          affiliatedNum TEXT,
+          affiliatedDate TEXT,
+          UNIQUE(keyNum, gender) ON CONFLICT REPLACE
+        )
+      ''');
+      });
+
+      var batch = database.batch();
+      int importedCount = 0;
+
+      for (var row in membersTable.rows) {
+        try {
+          final lastName = _getCellValue(row, 1).trim();
+          if (lastName.isEmpty) continue;
+
+          // Get office value with proper null/empty handling and default to 'Member'
+          final officeValue = _getCellValue(row, 13).trim();
+          final office = (officeValue.isEmpty || officeValue.toLowerCase() == 'null')
+              ? 'Member'
+              : officeValue;
+
+
+          // Insert or update member
+          batch.insert(
+            'members',
+            {
+              'lastName': lastName,
+              'firstName': _getCellValue(row, 2).trim(),
+              'middleName': _getCellValue(row, 3).trim(),
+              'natalDay': _getCellValue(row, 4).trim(),
+              'phoneNumber': _getCellValue(row, 5).trim(),
+              'keyNum': _getCellValue(row, 6).trim(),
+              'gender': _getCellValue(row, 7).trim().toUpperCase() == 'M' ? 'Male' : 'Female',
+              'affiliatedNum': _getCellValue(row, 12).trim(),
+              'tmo': _parseInt(_getCellValue(row, 8).trim()),
+              'late': _parseInt(_getCellValue(row, 10).trim()),
+              'ab_id': _parseInt(_getCellValue(row, 9).trim()),
+              'office': office,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+
+          if (lastName.length > 3) {
+            // This will automatically replace if keyNum+gender exists
+            batch.insert(
+              'dues',
+              {
+                'keyNum': _getCellValue(row, 6).trim(),
+                'gender': _getCellValue(row, 7).trim().toUpperCase() == 'M' ? 'Male' : 'Female',
+                'affiliatedNum': _getCellValue(row, 12).trim(),
+                'affiliatedDate': _getCellValue(row, 11).trim(),
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+
+          importedCount++;
+        } catch (e) {
+          print('Error processing row: $e');
+        }
+      }
+
+      await batch.commit();
+      await database.close();
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success',
+          text: 'Imported $importedCount records successfully',
+        );
+      }
+
+      return importedCount;
+    } catch (e) {
+      print('Import error: $e');
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          text: 'Failed to import data: ${e.toString()}',
+        );
+      }
+      return 0;
     }
-    print('Import done');
-    // }
-
-    // Data(ONYINGE, 3, 47, CellStyle(false, 0, false, Underline.None, 10, Garamond, TextWrapping.WrapText, VerticalAlign.Bottom, HorizontalAlign.Left, FFFF0000, none, Border(borderStyle: BorderStyle.Thin, borderColorHex: null), Border(borderStyle: BorderStyle.Thin, borderColorHex: null), Border(borderStyle: BorderStyle.Thin, borderColorHex: null), Border(borderStyle: BorderStyle.Thin, borderColorHex: null), Border(borderStyle: null, borderColorHex: null), false, false, StandardNumericNumFormat(0, "General")), Sheet1)
-
-
-    await database.close();
-    return 1;
   }
+
+  String _getCellValue(List<Data?> row, int index) {
+    if (row.length <= index) return '';
+    final cell = row[index];
+    return cell?.value?.toString() ?? '';
+  }
+
+  int _parseInt(String value) {
+    return int.tryParse(value) ?? 0;
+  }
+
 
   Future<void> _downloadFile(BuildContext context) async {
     // Check if storage permission is granted
@@ -197,7 +270,8 @@ class ImportMembers extends StatelessWidget {
     // Proceed with downloading the file if permission is granted
     if (status.isGranted) {
       try {
-        final ByteData data = await rootBundle.load('assets/files/$fileToDownload');
+        final ByteData data =
+            await rootBundle.load('assets/files/$fileToDownload');
         final List<int> bytes = data.buffer.asUint8List();
         // final String dir = (await getApplicationDocumentsDirectory()).path;
         final dir = await FilePicker.platform.getDirectoryPath();
@@ -215,7 +289,6 @@ class ImportMembers extends StatelessWidget {
           type: QuickAlertType.success,
           title: 'Download Successfully',
           text: 'Downloaded to $dir!',
-
         );
       } catch (e) {
         print('Error downloading file: $e');
@@ -232,7 +305,8 @@ class ImportMembers extends StatelessWidget {
         context: context,
         type: QuickAlertType.error,
         title: 'Oops...',
-        text: 'Storage permission not granted\n Please give permission or change directory',
+        text:
+            'Storage permission not granted\n Please give permission or change directory',
       );
     }
   }
@@ -284,7 +358,6 @@ class ImportMembers extends StatelessWidget {
 //   }
 // }
 
-
 //   Future<dynamic> importExcel1(File file) async {
 //     // import excel and return as json extract as json path
 // // Importing the excel file
@@ -314,7 +387,6 @@ class ImportMembers extends StatelessWidget {
 //     // Returning the JSON data
 //     return data;
 //   }
-
 
 // Future<dynamic> importExcel(File file) async {
 //   // var file = 'path/to/your/excel/file.xlsx';
@@ -349,5 +421,4 @@ class ImportMembers extends StatelessWidget {
 //     // File('path/to/your/output/json/file.json').writeAsStringSync(jsonString);
 //   }
 // }
-
 }
