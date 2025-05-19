@@ -36,7 +36,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
 
   void fetchAttendanceData() async {
     try {
-      List<List<String>> data = await getAttendance(2 ?? 0);
+      List<List<String>> data = await getAttendance(widget.event.id ?? 0);
       DatabaseHelper db = DatabaseHelper();
       int femaleC = await db.getAttendeeCount(widget.event.id!, female);
       int colombeC = await db.getColombeAttendeeCount(widget.event.id!);
@@ -102,6 +102,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
   Future<List<List<String>>> getAttendance(int eventID) async {
     DatabaseHelper dbHelper = DatabaseHelper();
     List<Members> members = await dbHelper.getEventMembers(eventID, 'ASC');
+    print("Event id $eventID");
 
     // Convert Members data to List<List<String>>
     List<List<String>> attendanceData = members.map((member) {

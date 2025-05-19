@@ -289,7 +289,7 @@ class DatabaseHelper {
     final List<Map<String, Object?>> memberMaps = await dbasql.rawQuery('''
     SELECT DISTINCT members.*
     FROM attendances
-    JOIN members ON attendances.keyNum = members.keyNum
+    JOIN members ON attendances.keyNum = members.keyNum and attendances.gender = members.gender
     WHERE attendances.events_id = ?
     ORDER BY attendances.id $orderBy
   ''', [id]);
@@ -547,10 +547,10 @@ class DatabaseHelper {
   Future<int> getAttendeeCount(int id, String gender) async {
     // Open the database
     await open();
-
+    // attendances.keyNum = members.keyNum
     // Query the number of attendees from the table
     int num = Sqflite.firstIntValue(await dbasql.rawQuery(
-        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum WHERE attendances.events_id = '$id' AND members.gender = '$gender'"))!;
+        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum and attendances.gender = members.gender WHERE attendances.events_id = '$id' AND members.gender = '$gender'"))!;
 
     // Close the database
     print('$gender $num');
@@ -565,7 +565,7 @@ class DatabaseHelper {
 
     // Query the number of attendees from the table
     int num = Sqflite.firstIntValue(await dbasql.rawQuery(
-        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum WHERE attendances.events_id = ? AND members.colombe = 1",
+        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum and attendances.gender = members.gender WHERE attendances.events_id = ? AND members.colombe = 1",
         [id]))!;
     // Close the database
     print('colombe $num');
