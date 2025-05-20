@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/MemberAttendance.dart';
 import '../models/membersRecords.dart';
 
 class DatabaseHelper {
@@ -74,6 +75,7 @@ class DatabaseHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               keyNum TEXT NOT NULL,
               gender TEXT NOT NULL,
+              attendance_office INTEGER NOT NULL,
               events_id INTEGER NOT NULL,
               entry_time TEXT, -- Change the type to TEXT
               CONSTRAINT events_attendances FOREIGN KEY (events_id) REFERENCES events (id),
@@ -278,7 +280,7 @@ class DatabaseHelper {
     return dataList;
   }
 
-  Future<List<Members>> getEventMembers(int id, String sortOrder) async {
+  Future<List<MemberAttendance>> getEventMembers(int id, String sortOrder) async {
     // Get a reference to the database.
     await open();
 
@@ -287,15 +289,18 @@ class DatabaseHelper {
 
     // Query the table for all the dogs.
     final List<Map<String, Object?>> memberMaps = await dbasql.rawQuery('''
-    SELECT DISTINCT members.*
-    FROM attendances
-    JOIN members ON attendances.keyNum = members.keyNum and attendances.gender = members.gender
-    WHERE attendances.events_id = ?
-    ORDER BY attendances.id $orderBy
-  ''', [id]);
+  SELECT DISTINCT members.*, attendances.*
+  FROM attendances
+  JOIN members ON attendances.keyNum = members.keyNum AND attendances.gender = members.gender
+  WHERE attendances.events_id = ?
+  ORDER BY 
+    attendances.attendance_office IS NULL,  -- FALSE (0) comes before TRUE (1)
+    attendances.attendance_office,
+    attendances.id $orderBy 
+''', [id]);
 
-    List<Members> dataList =
-        memberMaps.map((map) => Members.fromJson(map)).toList();
+    List<MemberAttendance> dataList =
+        memberMaps.map((map) => MemberAttendance.fromMap(map)).toList();
     await dbasql.close();
     print(dataList);
     return dataList;
@@ -554,6 +559,21 @@ class DatabaseHelper {
 
     // Close the database
     print('$gender $num');
+    await dbasql.close();
+
+    return num;
+  }
+
+  Future<int> getCandidateCount(int id, candidate) async {
+    // Open the database
+    await open();
+    // attendances.keyNum = members.keyNum
+    // Query the number of attendees from the table
+    int num = Sqflite.firstIntValue(await dbasql.rawQuery(
+        "SELECT DISTINCT COUNT(*) FROM attendances JOIN members ON attendances.keyNum = members.keyNum and attendances.gender = members.gender WHERE attendances.events_id = '$id' AND attendances.attendance_office = '$candidate'"))!;
+
+    // Close the database
+    // print('$gender $num');
     await dbasql.close();
 
     return num;

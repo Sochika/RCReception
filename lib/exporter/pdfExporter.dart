@@ -15,6 +15,7 @@ Future<String?> PdfExporter({
   int maleCount = 0,
   int femaleCount = 0,
   int colombeCount = 0,
+  int candidateCount = 0,
 }) async {
   final pdf = pw.Document();
   const String notoSansFont = 'assets/fonts/static/EBGaramond-Regular.ttf';
@@ -93,11 +94,15 @@ Future<String?> PdfExporter({
                         style: pw.TextStyle(font: boldFont, fontSize: 10),
                       ),
                       pw.Text(
-                        'Females: ${femaleCount - colombeCount}',
+                        'Sorors: ${femaleCount - colombeCount}',
                         style: pw.TextStyle(font: boldFont, fontSize: 10),
                       ),
                       pw.Text(
-                        'Males: $maleCount',
+                        'Fraters: $maleCount',
+                        style: pw.TextStyle(font: boldFont, fontSize: 10),
+                      ),
+                      pw.Text(
+                        candidateCount!= 0 ? 'Candidate: $candidateCount' : "",
                         style: pw.TextStyle(font: boldFont, fontSize: 10),
                       ),
                       pw.Text(

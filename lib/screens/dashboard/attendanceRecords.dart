@@ -9,6 +9,7 @@ import '../../../constants.dart';
 import '../../../data/sqlite.dart';
 import '../../exporter/membersPdf.dart';
 
+import '../../models/MemberAttendance.dart';
 import '../../models/attendances.dart';
 
 class MembersRecord extends StatefulWidget {
@@ -45,7 +46,7 @@ class _MembersRecordState extends State<MembersRecord> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Members>>(
+    return FutureBuilder<List<MemberAttendance>>(
       future: getAttendance(widget.event.id ?? 0),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -56,7 +57,7 @@ class _MembersRecordState extends State<MembersRecord> {
           return Text('Error: ${snapshot.error}');
         } else {
           // If data fetching is successful, build the UI with the retrieved data
-          List<Members> demoRecentFiles = snapshot.data ?? [];
+          List<MemberAttendance> demoRecentFiles = snapshot.data ?? [];
 
           count = demoRecentFiles.length;
           return Container(
@@ -135,11 +136,11 @@ class _MembersRecordState extends State<MembersRecord> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
-                        "Total Males: $maleCount",
+                        "Total Fraters: $maleCount",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
-                        "Total Females: $femaleCount",
+                        "Total Sorors: $femaleCount",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
 
@@ -154,21 +155,21 @@ class _MembersRecordState extends State<MembersRecord> {
     );
   }
 
-  Future<List<Members>> getAttendance(int eventID) async {
+  Future<List<MemberAttendance>> getAttendance(int eventID) async {
     DatabaseHelper dbHelper = DatabaseHelper();
 
     // Get all data from the SQLite database
     return dbHelper.getEventMembers(eventID, 'DESC');
   }
 
-  DataRow recentFileDataRow(Members member, int count) {
+  DataRow recentFileDataRow(MemberAttendance member, int count) {
     return DataRow(
       cells: [
         DataCell(Text('$count')),
         DataCell(
           Row(
             children: [
-              if (member.gender == 'Female')
+              if (member.member.gender == 'Female')
                 SvgPicture.asset(
                   "assets/icons/female.svg",
                   height: 30,
@@ -184,15 +185,15 @@ class _MembersRecordState extends State<MembersRecord> {
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-                child: Text(member.colombe == 0 ? member.keyNum : member.office),
+                child: Text(member.member.colombe == 0 ? member.member.keyNum : member.member.office),
               ),
             ],
           ),
         ),
-        DataCell(Text('${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.office} ${member.firstName} ${member.lastName}')),
-        DataCell(Text(ABs[member.ab]!)),
+        DataCell(Text('${member.member.colombe == 0 ? member.member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.member.office} ${member.member.firstName} ${member.member.lastName}')),
+        DataCell(Text(ABs[member.member.ab]!)),
         DataCell(
-          member.tmo == 1
+          member.member.tmo == 1
               ? SvgPicture.asset(
             "assets/icons/accept.svg",
             height: 30,
@@ -206,12 +207,12 @@ class _MembersRecordState extends State<MembersRecord> {
             color: Colors.redAccent,
           ),
         ),
-        DataCell(Text(member.ab == settingConst.abID ? '' : 'Yes')),
-        DataCell(Text(member.office)),
+        DataCell(Text(member.member.ab == settingConst.abID ? '' : 'Yes')),
+        DataCell(Text(member.attendance.office != 0 ? Office[member.attendance.office]! : member.member.office)),
         DataCell(
           GestureDetector(
             onTap: () async {
-              Attendances attendance = Attendances(keyNum: member.keyNum, gender: member.gender, eventID: widget.event.id ?? 0);
+              Attendances attendance = Attendances(keyNum: member.member.keyNum, gender: member.member.gender, office: 0, eventID: widget.event.id ?? 0);
               List<Attendances> checkAttend = await db.checkAttendMember(attendance);
               print('Check Attendee: ${checkAttend[0].id}');
               Alert(

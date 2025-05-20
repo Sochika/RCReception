@@ -10,6 +10,7 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import '../../../constants.dart';
 import '../../../data/sqlite.dart';
 import '../../exporter/pdfExporter.dart';
+import '../models/MemberAttendance.dart';
 
 
 class MembersRecordPDF extends StatefulWidget {
@@ -25,6 +26,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
   int maleCount = 0;
   int femaleCount = 0;
   int colombeCount = 0;
+  int candidateCount = 0;
   int count = 1;
   // var countM = {'male':maleCount, };
 
@@ -41,11 +43,13 @@ class _MembersRecordState extends State<MembersRecordPDF> {
       int femaleC = await db.getAttendeeCount(widget.event.id!, female);
       int colombeC = await db.getColombeAttendeeCount(widget.event.id!);
       int maleC = await db.getAttendeeCount(widget.event.id!, male);
+      int candidateC = await db.getCandidateCount(widget.event.id!, 17);
       setState(() {
         attendanceData = data;
         femaleCount = femaleC;
         colombeCount = colombeC;
         maleCount = maleC;
+        candidateCount = candidateC;
       });
     } catch (error) {
       print('Error fetching attendance data: $error');
@@ -72,7 +76,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
             onPressed: () async {
               // attendanceData.insert(0, ['S/N', 'Key Number', 'Name', 'AB', 'TMO', 'Office']); // Add header
               try {
-                String? filePath = await PdfExporter(data: attendanceData, title: ab, docTitle: docTitle, maleCount: maleCount, femaleCount: femaleCount, colombeCount: colombeCount);
+                String? filePath = await PdfExporter(data: attendanceData, title: ab, docTitle: docTitle, maleCount: maleCount, femaleCount: femaleCount, colombeCount: colombeCount, candidateCount: candidateCount);
                 if (filePath != null) {
                   showExportAlert(context, filePath);
                 } else {
@@ -101,19 +105,20 @@ class _MembersRecordState extends State<MembersRecordPDF> {
 
   Future<List<List<String>>> getAttendance(int eventID) async {
     DatabaseHelper dbHelper = DatabaseHelper();
-    List<Members> members = await dbHelper.getEventMembers(eventID, 'ASC');
+    List<MemberAttendance> members = await dbHelper.getEventMembers(eventID, 'DSC');
     print("Event id $eventID");
 
     // Convert Members data to List<List<String>>
     List<List<String>> attendanceData = members.map((member) {
+      String? memOffice =  member.attendance.office != 0 ? Office[member.attendance.office] : member.member.office;
       List<String> rowData = [
         count.toString(), // Assuming count is the serial number
-        member.colombe == 0 ? member.keyNum : member.office,
-        '${member.colombe == 0 ? member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.office} ${member.firstName} ${member.lastName}',
-        ABs[member.ab] ?? '', // Assuming ABs is a map
-        member.tmo == 1 ? 'Yes' : 'No', // Assuming tmo is a boolean
-      member.ab == settingConst.abID ? '' : 'Yes',
-        member.office
+        member.member.colombe == 0 ? member.member.keyNum : member.member.office,
+        '${member.member.colombe == 0 ? member.member.gender == 'Male' ? 'Fr.' : 'Sr.' : member.member.office} ${member.member.firstName} ${member.member.lastName}',
+        ABs[member.member.ab] ?? '', // Assuming ABs is a map
+        member.member.tmo == 1 ? 'Yes' : 'No', // Assuming tmo is a boolean
+      member.member.ab == settingConst.abID ? '' : 'Yes',
+        memOffice ?? "Member"
       ];
 
       count++; // Increment count for the next member
