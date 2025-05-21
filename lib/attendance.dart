@@ -89,7 +89,7 @@
 //               Container(
 //                 padding: const EdgeInsets.all(8),
 //                 child: TextField(
-//                   decoration: const InputDecoration(labelText: 'Name of Speaker'),
+//                   decoration: const InputDecoration(labelText: 'Name of Master'),
 //                   controller: speakerController,
 //                 ),
 //               ),

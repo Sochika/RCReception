@@ -32,7 +32,7 @@ class Attendances {
     'id': id,
     'keyNum': keyNum,
     'gender': gender,
-    'attendance_office': office,
+    'attendance_office': office == 0 ? null : office,
     'events_id': eventID,
     // 'created_at': createdAt?.toIso8601String(),
   };

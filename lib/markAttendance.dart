@@ -156,7 +156,8 @@ class _MarkAttendanceState extends State<MarkAttendance> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Member(s): Please Click on the Name'),
+            title: const Text('Member(s): \n Please Click on the Name or Select Office first, where be'),
+            titleTextStyle: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
             icon: const Icon(Icons.people),
             content: SizedBox(
               width: width/3,
@@ -192,47 +193,47 @@ class _MarkAttendanceState extends State<MarkAttendance> {
                         },
                       ),
                       onTap: () async {
-                        if (selectedOfficeId == null) {
-                          Alert(
-                            context: context,
-                            type: AlertType.error,
-                            title: "Office Required",
-                            desc: "Please select an office before marking attendance",
-                            style: const AlertStyle(
-                                titleStyle: TextStyle(color: Colors.white),
-                                descStyle: TextStyle(color: Colors.white)
-                            ),
-                            buttons: [
-                              DialogButton(
-                                onPressed: () => Navigator.pop(context),
-                                color: const Color.fromRGBO(242, 67, 60, 1.0),
-                                child: const Text(
-                                  "OK",
-                                  style: TextStyle(color: Colors.white, fontSize: 18),
-                                ),
-                              ),
-                            ],
-                          ).show();
-                          return;
-                        }
+                        // if (selectedOfficeId == null) {
+                        //   Alert(
+                        //     context: context,
+                        //     type: AlertType.error,
+                        //     title: "Office Required",
+                        //     desc: "Please select an office before marking attendance",
+                        //     style: const AlertStyle(
+                        //         titleStyle: TextStyle(color: Colors.white),
+                        //         descStyle: TextStyle(color: Colors.white)
+                        //     ),
+                        //     buttons: [
+                        //       DialogButton(
+                        //         onPressed: () => Navigator.pop(context),
+                        //         color: const Color.fromRGBO(242, 67, 60, 1.0),
+                        //         child: const Text(
+                        //           "OK",
+                        //           style: TextStyle(color: Colors.white, fontSize: 18),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ).show();
+                        //   return;
+                        // }
 
                         Attendances attendance = Attendances(
                             keyNum: members[index].keyNum,
                             gender: members[index].gender,
-                            office: selectedOfficeId!, // Store the office title
+                            office: selectedOfficeId ?? 0, // Store the office title
                             // officeId: selectedOfficeId, // Store the office ID if your model supports it
                             eventID: widget.events.id ?? 0
                         );
 
                         // Rest of your attendance marking logic...
                         var idNum = await db.markAttendances(attendance);
-
+                        String? role = selectedOfficeId == null ? "" : "as ${Office[selectedOfficeId]}";
                         if (idNum == 1) {
                           Alert(
                             context: context,
                             type: AlertType.success,
                             title: "Key Number: ${members[index].keyNum}",
-                            desc: "has been marked present as ${Office[selectedOfficeId]}",
+                            desc: "has been marked present $role",
                             style: const AlertStyle(
                                 titleStyle: TextStyle(color: Colors.white),
                                 descStyle: TextStyle(color: Colors.white)

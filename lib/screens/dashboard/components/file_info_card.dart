@@ -108,7 +108,7 @@ class _FileInfoCardState extends State<FileInfoCard> {
                               descStyle: TextStyle(color: Colors.white, fontSize: 14),
                             ),
                             title: 'Edit This Day Attendance',
-                            desc: "Please Edit Activity, Time and Name of Speaker.",
+                            desc: "Please Edit Activity, Time and Name of Master.",
                             content: SizedBox(
                               height: 300.0,
                               width: 250.0,
@@ -186,7 +186,7 @@ class _FileInfoCardState extends State<FileInfoCard> {
                                     padding: const EdgeInsets.all(8),
                                     child: TextField(
                                       decoration: const InputDecoration(
-                                        labelText: 'Name of Speaker',
+                                        labelText: 'Name of Master',
                                         icon: Icon(FontAwesomeIcons.person),
                                       ),
                                       controller: speakerController,

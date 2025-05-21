@@ -87,7 +87,7 @@ class _MainScreenState extends State<MainScreen> {
                           descStyle: TextStyle(color: Colors.white, fontSize: 14),
                         ),
                         title: 'This Day Attendance',
-                        desc: "Please Input Activity, Time and Name of Speaker.",
+                        desc: "Please Input Activity, Time and Name of Master.",
                   content:SizedBox(
                     height: 300.0,
                     width: 250.0,
@@ -137,7 +137,7 @@ class _MainScreenState extends State<MainScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           child: TextField(
-                            decoration: const InputDecoration(labelText: 'Name of Speaker',
+                            decoration: const InputDecoration(labelText: 'Name of Master',
                               icon: Icon(FontAwesomeIcons.person),),
                             controller: speakerController,
                           ),
