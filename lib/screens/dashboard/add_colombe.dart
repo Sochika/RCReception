@@ -1,17 +1,17 @@
 
 import 'package:attendance/models/membersRecords.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:intl/intl.dart';
 
 import 'package:quickalert/quickalert.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:toggle_switch/toggle_switch.dart';
+
 
 import '../../constants.dart';
 import '../../data/sqlite.dart';
 
-import 'action/importMembers.dart';
+
 import 'components/header.dart';
 
 
@@ -44,8 +44,7 @@ class _AddColombeDataState extends State<AddColombeData> {
     TextEditingController lNameController = TextEditingController();
     TextEditingController fNameController = TextEditingController();
     TextEditingController mNameController = TextEditingController();
-    TextEditingController keyNumController = TextEditingController();
-    TextEditingController genderController = TextEditingController();
+   TextEditingController genderController = TextEditingController();
     TextEditingController emailController = TextEditingController();
     TextEditingController phoneNumController = TextEditingController();
     TextEditingController gcaController = TextEditingController();
@@ -61,7 +60,7 @@ class _AddColombeDataState extends State<AddColombeData> {
     emailController.text = 'colombe@amorc.org.ng';
     phoneNumController.text = '080200000';
     // officeController.text = 'Colombe';
-    int? _selectedAbId;
+    // int? _selectedAbId;
 
 
 
@@ -204,7 +203,7 @@ class _AddColombeDataState extends State<AddColombeData> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    const SizedBox(width: defaultPadding),
+                    // const SizedBox(width: defaultPadding),
                     SizedBox(
                       height: 90.0,
                       width: width /4,
@@ -239,7 +238,7 @@ class _AddColombeDataState extends State<AddColombeData> {
                           text: 'Please fill the required Data',
                         );
                       }else{
-                        Members member = Members(firstName: fNameController.text, lastName: lNameController.text.trim(), middleName: mNameController.text.trim(), keyNum: fNameController.text.toLowerCase().trim() + lNameController.text.toLowerCase().trim(), gender: female, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text.trim(), phoneNum: phoneNumController.text.trim(), tmo: 0, colombe: 1, dateOfBirth: dobController.text ?? '');
+                        Members member = Members(firstName: fNameController.text, lastName: lNameController.text.trim(), middleName: mNameController.text.trim(), keyNum: fNameController.text.toLowerCase().trim() + lNameController.text.toLowerCase().trim(), gender: female, ab: int.parse(abController.text), gca: int.parse(gcaController.text), degree: degreeController.text, office: officeController.text, email: emailController.text.trim(), phoneNum: phoneNumController.text.trim(), tmo: 0, colombe: 1, dateOfBirth: dobController.text);
 
                         // print(fNameController.text);
                         // print(member.lastName);

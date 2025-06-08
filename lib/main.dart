@@ -15,14 +15,34 @@ import 'dart:io';
 import 'data/sqlite.dart';
 
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-  if (Platform.isWindows || Platform.isLinux) {
-    // Initialize FFI
-    sqfliteFfiInit();
+  // Initialize database
+  await initDatabase();
+  final  DatabaseHelper db = DatabaseHelper();
+  await db.database;
+
+
+  final isDbValid = await db.verifyDatabase();
+  if (!isDbValid) {
+    // Handle invalid database - perhaps delete and recreate
+    print("Database not working");
+    // await db.close();
+    // await deleteDatabase(join(await getDatabasesPath(), db.dbName));
+    await db.database;
   }
-  databaseFactory = databaseFactoryFfi;
+
   runApp(const MyApp());
+}
+
+Future<void> initDatabase() async {
+  if (Platform.isWindows || Platform.isLinux) {
+    // Initialize FFI for desktop
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  // Android/iOS will automatically use the correct implementation
 }
 
 class MyApp extends StatefulWidget {
@@ -54,8 +74,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    DatabaseHelper db = DatabaseHelper();
-    db.open();
+
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -104,8 +104,9 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(10),
                           child: DropdownButtonFormField<String>(
+                          isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'Activity',
                               icon: Icon(FontAwesomeIcons.ankh),

@@ -289,18 +289,11 @@ class _AddMemberDataState extends State<AddMemberData> {
                         dropdownMenuEntries: const [
                           // DropdownMenuEntry(value: '', label: ''),
                           DropdownMenuEntry(value: 'Member', label: 'Member'),
-                          DropdownMenuEntry(value: 'Master', label: 'Master'),
-                          DropdownMenuEntry(value: 'DM', label: 'DM'),
-                          DropdownMenuEntry(value: 'Chaplain', label: 'Chaplain'),
-                          DropdownMenuEntry(value: 'Chanter', label: 'Chanter'),
-                          DropdownMenuEntry(value: 'Chanteress', label: 'Chanteress'),
-                          DropdownMenuEntry(value: 'Matre', label: 'Matre'),
-                          DropdownMenuEntry(value: 'Inner Guardian', label: 'Inner Guardian'),
-                          DropdownMenuEntry(value: 'Outer Guardian', label: 'Outer Guardian'),
-                          DropdownMenuEntry(value: 'GC', label: 'GC'),
-                          DropdownMenuEntry(value: 'GCE', label: 'GCE'),
+                          DropdownMenuEntry(value: 'PM', label: 'PM'),
                           DropdownMenuEntry(value: 'RM', label: 'RM'),
                           DropdownMenuEntry(value: 'RME', label: 'RME'),
+                          DropdownMenuEntry(value: 'GC', label: 'GC'),
+                          DropdownMenuEntry(value: 'GCE', label: 'GCE'),
 
                         ],
                         onSelected: (value){

@@ -1,7 +1,7 @@
 // import 'dart:io';
 
 import 'package:attendance/models/events.dart';
-import 'package:attendance/models/membersRecords.dart';
+
 
 import 'package:flutter/material.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -43,7 +43,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
       int femaleC = await db.getAttendeeCount(widget.event.id!, female);
       int colombeC = await db.getColombeAttendeeCount(widget.event.id!);
       int maleC = await db.getAttendeeCount(widget.event.id!, male);
-      int candidateC = await db.getCandidateCount(widget.event.id!, 17);
+      int candidateC = await db.getCandidateCount(widget.event.id!, candidate);
       setState(() {
         attendanceData = data;
         femaleCount = femaleC;
@@ -105,7 +105,7 @@ class _MembersRecordState extends State<MembersRecordPDF> {
 
   Future<List<List<String>>> getAttendance(int eventID) async {
     DatabaseHelper dbHelper = DatabaseHelper();
-    List<MemberAttendance> members = await dbHelper.getEventMembers(eventID, 'DSC');
+    List<MemberAttendance> members = await dbHelper.getEventMembers(eventID, 'ASC');
     print("Event id $eventID");
 
     // Convert Members data to List<List<String>>

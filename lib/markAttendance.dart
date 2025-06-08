@@ -2,10 +2,10 @@ import 'package:attendance/screens/dashboard/attendanceRecords.dart';
 import 'package:flutter/material.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:attendance/models/events.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import 'constants.dart';
 import 'data/sqlite.dart';
-
 import 'models/membersRecords.dart';
 import 'models/attendances.dart';
 
@@ -19,260 +19,317 @@ class MarkAttendance extends StatefulWidget {
 }
 
 class _MarkAttendanceState extends State<MarkAttendance> {
-  // int numFemales = 0;
-  // int numMales = 0;
   final DatabaseHelper db = DatabaseHelper();
+  final TextEditingController keyNumController = TextEditingController();
+  final TextEditingController colombeController = TextEditingController();
+  final FlutterTts flutterTts = FlutterTts();
+  bool _isDialogOpen = false;
+  bool _isProcessing = false;
 
-  TextEditingController keyNumController = TextEditingController();
-
-  bool isDialogOpen = false; // Move isDialogOpen to the state class
+  @override
+  void dispose() {
+    keyNumController.dispose();
+    colombeController.dispose();
+    flutterTts.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final double height = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text('Mark Attendance; ${eventCats[widget.events.event_typeID]}'),
+        title: Text('Mark Attendance: ${eventCats[widget.events.event_typeID]}'),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Row(
-              //   children: [
-              //     ElevatedButton.icon(
-              //       onPressed: () async {
-              //
-              //         final exporter = PdfExporter(
-              //           // data: [
-              //           //   ['S/N', 'Key Number', 'Name', 'AB', 'TMO'],
-              //           //   // Add your data rows here
-              //           // ],
-              //         );
-              //         // await exporter.createPDF();
-              //         // Show a message or perform any other action after PDF creation
-              //
-              //       },
-              //       icon: const Icon(Icons.arrow_downward),
-              //       label: const Text("PDF"),
-              //     ),
-              //     SizedBox(width: width / 12),
-              //
-              //   ],
-              // ),
-              SizedBox(height: height / 18),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 90.0,
-                    width: width / 3,
-                    child: TextField(
-                      decoration:
-                          const InputDecoration(labelText: 'Key Number'),
-                      controller: keyNumController,
-                      keyboardType: TextInputType.number,
-                      onSubmitted: (value) =>
-                          keyAttend(value.trim(), width, height),
-                    ),
-                  ),
-                  SizedBox(width: width / 12),
-                  ElevatedButton(
-                    onPressed: () =>
-                        keyAttend(keyNumController.text.trim(), width, height),
-                    child: const Text('Enter'),
-                  ),
-                ],
+        child: Column(
+          children: [
+            // Fixed input section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildInputSection(size),
+            ),
+
+            // Scrollable members list
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: MembersRecord(event: widget.events),
               ),
-              MembersRecord(
-                event: widget.events,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  keyAttend(String value, double width, double height) async {
-    // Check if dialog is already open
-    if (isDialogOpen) {
-      return;
-    }
 
-    String keyNumber = value;
-    if (keyNumber.isEmpty) {
-      Alert(
-        context: context,
-        type: AlertType.error,
-        title: "Key Number",
-        desc: "Please enter a Key Number",
-        buttons: [
-          DialogButton(
-            onPressed: () => Navigator.pop(context),
-            color: const Color.fromRGBO(0, 179, 134, 1.0),
-            child: const Text(
-              "Close",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ],
-      ).show();
-      return;
-    }
-
-    List<Members> members = await db.getMembers(keyNumber);
-
-    if (members.isEmpty) {
-      Alert(
-        context: context,
-        type: AlertType.info,
-        title: "Key Number: $keyNumber",
-        desc: "is not a Member of this Lodge",
-        style: const AlertStyle(
-            titleStyle: TextStyle(color: Colors.blueAccent),
-            descStyle: TextStyle(color: Colors.blueAccent)),
-        buttons: [
-          DialogButton(
-            onPressed: () => Navigator.pop(context),
-            color: const Color.fromRGBO(65, 102, 211, 0.8),
-            child: const Text(
-              "Close",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ],
-      ).show();
-    } else {
-      setState(() {
-        isDialogOpen =
-            true; // Set isDialogOpen to true before opening the dialog
-      });
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Member(s): \n Please Click on the Name or Select Office first, where be'),
-            titleTextStyle: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
-            icon: const Icon(Icons.people),
-            content: SizedBox(
-              width: width/3,
-              height: height/4,
-              child: ListView.builder(
-              itemCount: members.length,
-              itemBuilder: (BuildContext context, int index) {
-                int? selectedOfficeId; // Store the selected office ID
-
-                return StatefulBuilder(
-                  builder: (BuildContext context, StateSetter setState) {
-                    return ListTile(
-                      title: Text(
-                          "${members[index].colombe == 0 ? members[index].keyNum : ''}: "
-                              "${members[index].colombe == 0 ? members[index].gender == 'Male' ? 'Fr.' : 'Sr.' : members[index].office} "
-                              "${members[index].firstName} "
-                              "${members[index].middleName == 'null' ? '' : members[index].middleName} "
-                              "${members[index].lastName}, ${members[index].gender}"
-                      ),
-                      trailing: DropdownButton<int>(
-                        value: selectedOfficeId,
-                        hint: const Text('Select Office'),
-                        items: Office.entries.map((entry) {
-                          return DropdownMenuItem<int>(
-                            value: entry.key,
-                            child: Text(entry.value),
-                          );
-                        }).toList(),
-                        onChanged: (int? newValue) {
-                          setState(() {
-                            selectedOfficeId = newValue;
-                          });
-                        },
-                      ),
-                      onTap: () async {
-                        // if (selectedOfficeId == null) {
-                        //   Alert(
-                        //     context: context,
-                        //     type: AlertType.error,
-                        //     title: "Office Required",
-                        //     desc: "Please select an office before marking attendance",
-                        //     style: const AlertStyle(
-                        //         titleStyle: TextStyle(color: Colors.white),
-                        //         descStyle: TextStyle(color: Colors.white)
-                        //     ),
-                        //     buttons: [
-                        //       DialogButton(
-                        //         onPressed: () => Navigator.pop(context),
-                        //         color: const Color.fromRGBO(242, 67, 60, 1.0),
-                        //         child: const Text(
-                        //           "OK",
-                        //           style: TextStyle(color: Colors.white, fontSize: 18),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ).show();
-                        //   return;
-                        // }
-
-                        Attendances attendance = Attendances(
-                            keyNum: members[index].keyNum,
-                            gender: members[index].gender,
-                            office: selectedOfficeId ?? 0, // Store the office title
-                            // officeId: selectedOfficeId, // Store the office ID if your model supports it
-                            eventID: widget.events.id ?? 0
-                        );
-
-                        // Rest of your attendance marking logic...
-                        var idNum = await db.markAttendances(attendance);
-                        String? role = selectedOfficeId == null ? "" : "as ${Office[selectedOfficeId]}";
-                        if (idNum == 1) {
-                          Alert(
-                            context: context,
-                            type: AlertType.success,
-                            title: "Key Number: ${members[index].keyNum}",
-                            desc: "has been marked present $role",
-                            style: const AlertStyle(
-                                titleStyle: TextStyle(color: Colors.white),
-                                descStyle: TextStyle(color: Colors.white)
-                            ),
-                            buttons: [
-                              DialogButton(
-                                onPressed: () => Navigator.pop(context),
-                                color: const Color.fromRGBO(0, 179, 134, 1.0),
-                                child: const Text(
-                                  "Close",
-                                  style: TextStyle(color: Colors.white, fontSize: 18),
-                                ),
-                              ),
-                            ],
-                          ).show();
-                        }
-                        // Rest of your error handling...
-                      },
-                    );
-                  },
-                );
-              },
-            )
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    isDialogOpen = false;
-                    keyNumController.text ='';
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('CLOSE'),
+  Widget _buildInputSection(Size size) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: size.width * 0.3,
+          child: Column(
+            children: [
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Key Number',
+                  border: OutlineInputBorder(),
+                ),
+                controller: keyNumController,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.go,
+                onSubmitted: (value) => _handleKeyAttendance(value.trim(), isColombe: false),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Colombe',
+                  border: OutlineInputBorder(),
+                ),
+                controller: colombeController,
+                textInputAction: TextInputAction.go,
+                onSubmitted: (value) => _handleKeyAttendance(value.trim(), isColombe: true),
               ),
             ],
-          );
-        },
+          ),
+        ),
+        const SizedBox(width: 16),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+          onPressed: () {
+            if (keyNumController.text.isNotEmpty) {
+              _handleKeyAttendance(keyNumController.text.trim(), isColombe: false);
+            } else if (colombeController.text.isNotEmpty) {
+              _handleKeyAttendance(colombeController.text.trim(), isColombe: true);
+            } else {
+              _showErrorDialog("Please enter either Key Number or Colombe");
+            }
+          },
+          child: _isProcessing
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Enter'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleKeyAttendance(String value, {required bool isColombe}) async {
+    if (_isDialogOpen || value.isEmpty) {
+      if (value.isEmpty) {
+        _showErrorDialog("Please enter a value");
+      }
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final members = isColombe
+          ? await db.getMembers(keyNum: value, colombe: true)
+          : await db.getMembers(keyNum: value);
+
+      if (members.isEmpty) {
+        _showInfoDialog(
+          title: isColombe ? "Colombe: $value" : "Key Number: $value",
+          message: "not found",
+        );
+        return;
+      }
+
+      setState(() => _isDialogOpen = true);
+      await showDialog(
+        context: context,
+        builder: (context) => _buildMembersDialog(members),
       );
+    } catch (e) {
+      _showErrorDialog("Error searching: ${e.toString()}");
+    } finally {
+      setState(() {
+        _isDialogOpen = false;
+        _isProcessing = false;
+        keyNumController.clear();
+        colombeController.clear();
+      });
     }
   }
+
+  Widget _buildMembersDialog(List<Members> members) {
+    return AlertDialog(
+      title: const Text('Member(s) Found'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: MediaQuery.of(context).size.height * 0.5,
+        child: ListView.separated(
+          itemCount: members.length,
+          separatorBuilder: (_, __) => const Divider(),
+          itemBuilder: (_, index) => _buildMemberTile(members[index]),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('CLOSE'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMemberTile(Members member) {
+    int? selectedOfficeId;
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return ListTile(
+          title: Text(
+            _formatMemberName(member),
+            style: const TextStyle(fontSize: 16),
+          ),
+          subtitle: member.colombe == 0 ? null : Text("Office: ${member.office}"),
+          trailing: member.colombe == 0
+              ? DropdownButton<int>(
+            value: selectedOfficeId,
+            hint: const Text('Select Office'),
+            items: Office.entries.map((entry) {
+              return DropdownMenuItem<int>(
+                value: entry.key,
+                child: Text(entry.value),
+              );
+            }).toList(),
+            onChanged: (value) => setState(() => selectedOfficeId = value),
+          )
+              : null,
+          onTap: () async => await _markAttendance(member, selectedOfficeId),
+        );
+      },
+    );
+  }
+
+  String _formatMemberName(Members member) {
+    final prefix = member.colombe == 0
+        ? member.gender == 'Male' ? 'Fr.' : 'Sr.'
+        : '';
+
+    return [
+      if (member.colombe == 0) '${member.keyNum}:',
+      prefix,
+      member.firstName,
+      if (member.middleName != 'null') member.middleName,
+      member.lastName,
+    ].where((part) => part.isNotEmpty).join(' ');
+  }
+
+  Future<void> _markAttendance(Members member, int? officeId) async {
+    final attendance = Attendances(
+      keyNum: member.keyNum,
+      gender: member.gender,
+      office: officeId ?? 0,
+      eventID: widget.events.id ?? 0,
+    );
+    final settings = await DatabaseHelper().getSetting();
+
+    try {
+      final result = await db.markAttendance(attendance);
+
+      Navigator.pop(context); // Close member selection dialog first
+
+      if (result == 1) {
+        final role = officeId == null ? "" : " as ${Office[officeId]}";
+        if(settings!.tts.isOdd){
+          await _speak("${member.colombe == 1 ? "Colombe" : member.gender == "Male" ? "Frater" : "Soror"} ${member.firstName} ${member.lastName} marked present$role");
+        }else if(settings.ttsimple.isOdd){
+          await _speak("${member.colombe == 1 ? "Colombe" : member.gender == "Male" ? "Frater" : "Soror"} marked present$role");
+        }
+        _showSuccessDialog(
+          title: "Success",
+          message: "${member.colombe == 1 ? "Colombe" : member.gender == "Male" ? "Fr." : "Sr."} ${member.firstName} ${member.lastName} marked present$role",
+        );
+      }
+      else if (result == 0) {
+        _showInfoDialog(
+          title: "Already Marked",
+          message: "${member.firstName} ${member.lastName} is already present",
+        );
+      }
+      else {
+        _showErrorDialog("Failed to mark attendance");
+      }
+    }
+    catch (e) {
+      Navigator.pop(context);
+      _showErrorDialog("Error: ${e.toString()}");
+    }
+  }
+
+  Future<void> _speak(String text) async {
+    await flutterTts.setLanguage("en-NG");
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(text);
+  }
+
+  void _showSuccessDialog({required String title, required String message}) {
+    Alert(
+      context: context,
+      type: AlertType.success,
+      title: title,
+      desc: message,
+      style: const AlertStyle(
+          titleStyle: TextStyle(color: Colors.white),
+          descStyle: TextStyle(color: Colors.white)
+      ),
+      buttons: [DialogButton(
+        onPressed: () => Navigator.pop(context),
+        color: Colors.redAccent,
+        child: const Text("Close"),
+      )],
+    ).show();
+  }
+
+  void _showErrorDialog(String message) {
+    Alert(
+      context: context,
+      type: AlertType.error,
+      title: "Error",
+      desc: message,
+      style: const AlertStyle(
+          titleStyle: TextStyle(color: Colors.white),
+          descStyle: TextStyle(color: Colors.white)
+      ),
+      buttons: [DialogButton(
+        onPressed: () => Navigator.pop(context),
+        color: Colors.redAccent,
+        child: const Text("OK"),
+      )],
+    ).show();
+  }
+
+  void _showInfoDialog({required String title, required String message}) {
+    Alert(
+      context: context,
+      type: AlertType.info,
+      title: title,
+      desc: message,
+        style: const AlertStyle(
+                titleStyle: TextStyle(color: Colors.white),
+                descStyle: TextStyle(color: Colors.white)
+            ),
+      buttons: [DialogButton(
+        onPressed: () => Navigator.pop(context),
+        color: Colors.redAccent,
+        child: const Text("Close",
+        style: TextStyle(color: Colors.white, fontSize: 18)),
+      ),],
+    ).show();
+  }
 }
+  // Future _speak(String word) async{
+  //   late FlutterTts flutterTts;
+  //   var result = await flutterTts.speak(word);
+  //   if (result == 1) setState(() => ttsState = TtsState.playing);
+  // }
+

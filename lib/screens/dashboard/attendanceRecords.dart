@@ -1,5 +1,4 @@
 import 'package:attendance/models/events.dart';
-import 'package:attendance/models/membersRecords.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -24,6 +23,8 @@ class _MembersRecordState extends State<MembersRecord> {
   int count = 1;
   int maleCount = 0;
   int femaleCount = 0;
+  int colombeCount = 0;
+  int candidateCount = 0;
   late DatabaseHelper db;
 
   @override
@@ -36,9 +37,13 @@ class _MembersRecordState extends State<MembersRecord> {
   void fetchMemberCounts() async {
     int femaleCount = await db.getAttendeeCount(widget.event.id!, female);
     int maleCount = await db.getAttendeeCount(widget.event.id!, male);
+    int colombeCount = await db.getColombeAttendeeCount(widget.event.id!);
+    int candidateCount = await db.getCandidateCount(widget.event.id!, 17);
     setState(() {
       this.femaleCount = femaleCount;
       this.maleCount = maleCount;
+      this.colombeCount = colombeCount;
+      this.candidateCount = candidateCount;
     });
   }
 
@@ -132,7 +137,7 @@ class _MembersRecordState extends State<MembersRecord> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Total Attendees: $count",
+                        "Total Attendees: ${maleCount + femaleCount}",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
@@ -140,9 +145,18 @@ class _MembersRecordState extends State<MembersRecord> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
-                        "Total Sorors: $femaleCount",
+                        "Total Sorors: ${femaleCount - colombeCount}",
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
+                      Text(
+                        "Total Colombes: $colombeCount",
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      if(candidateCount > 0)
+                        Text(
+                          "Total Candidate: $candidateCount",
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
 
                     ],
                   ),
@@ -159,7 +173,7 @@ class _MembersRecordState extends State<MembersRecord> {
     DatabaseHelper dbHelper = DatabaseHelper();
 
     // Get all data from the SQLite database
-    return dbHelper.getEventMembers(eventID, 'DESC');
+    return dbHelper.getEntryMembers(eventID, 'DESC');
   }
 
   DataRow recentFileDataRow(MemberAttendance member, int count) {
